@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import { useQuery, gql } from "@apollo/client";
+import * as Sentry from "@sentry/nextjs";
 
 // GraphQL Queries
 const GET_USERS_QUERY = gql`
@@ -48,6 +49,9 @@ const Home = () => {
       headers: {
         Authorization: `${authToken}`,
       },
+      onError: (err: unknown) => {
+        Sentry.captureException(err);
+      },
     },
   });
 
@@ -62,30 +66,48 @@ const Home = () => {
       headers: {
         Authorization: `${authToken}`,
       },
+      onError: (err: unknown) => {
+        Sentry.captureException(err);
+      },
     },
   });
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const token = localStorage.getItem("token");
-      if (token) {
-        setAuthToken(token);
+    try {
+      if (typeof window !== "undefined") {
+        const token = localStorage.getItem("token");
+        if (token) {
+          setAuthToken(token);
+        }
       }
+    } catch (err) {
+      Sentry.captureException(err);
     }
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    setAuthToken(null);
-    router.push("/login");
+    try {
+      localStorage.removeItem("token");
+      setAuthToken(null);
+      router.push("/login");
+    } catch (err) {
+      Sentry.captureException(err);
+    }
   };
 
   const handleUserClick = (userId: number) => {
-    setSelectedUserId(userId);
+    try {
+      setSelectedUserId(userId);
+    } catch (err) {
+      Sentry.captureException(err);
+    }
   };
 
   if (loading || !authToken) return <p>Loading...</p>;
-  if (error) return <p>Error: {error.message}</p>;
+  if (error) {
+    Sentry.captureException(error);
+    return <p>Error: {error.message}</p>;
+  }
 
   return (
     <div className="container mx-auto p-4">
@@ -130,7 +152,10 @@ const Home = () => {
           {ordersLoading ? (
             <p>Loading orders...</p>
           ) : ordersError ? (
-            <p>Error: {ordersError.message}</p>
+            <>
+              <p>Error: {ordersError.message}</p>
+              {Sentry.captureException(ordersError)}
+            </>
           ) : (
             <table className="min-w-full table-auto">
               <thead>
