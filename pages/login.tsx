@@ -60,7 +60,7 @@ export default function Login() {
           type="submit"
           className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600"
         >
-          Loginfsfcvbmn
+          Loginadsfgvmb
         </button>
         <p className="text-sm text-center mt-4">
           Do not have an account?{" "}
